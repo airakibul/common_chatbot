@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from app.schemas.chat_schemas import ChatRequest, ChatResponse, ChatHistoryRequest
-from app.services.chat_service import generate_chat_response
+from app.services.chat_service import generate_chat_response_with_history
 from app.services.database_service import DatabaseService
 from app.database import get_db
 
@@ -30,8 +30,8 @@ async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db)):
             content=req.message
         )
         
-        # Generate AI response
-        reply = await generate_chat_response(req.message)
+        # Generate AI response with conversation history
+        reply = await generate_chat_response_with_history(db, thread.thread_id, req.message)
         
         # Save assistant message to PostgreSQL
         await DatabaseService.save_message(
